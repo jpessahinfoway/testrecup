@@ -25,7 +25,7 @@ class TemplateController extends AbstractController
     }
 
     /**
-     * @Route("/template/stage1/create", name="templateStage1",methods="GET")
+     * @Route("/template/stage1/create", name="templateStage1",methods="get")
      */
     public function stage1Creation(\Symfony\Component\HttpFoundation\Request $request)
     {
@@ -40,6 +40,21 @@ class TemplateController extends AbstractController
         ]);
     }
 
+
+    /**
+     * @Route("/template/test", name="mytest",methods="post")
+     */
+    public function test(Request $request)
+    {
+
+        $test = $request->get('test');
+
+        var_dump($test);
+
+        return $this->render('template/test.html.twig', [
+            'test'   => $test,
+        ]);
+    }
 
     /**
      * @Route("/template/create/{name}/{format}", name="templateCreation",requirements={

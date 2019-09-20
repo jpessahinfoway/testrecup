@@ -6,6 +6,9 @@ class TemplateToolBox{
         //this.setToolBoxCaseSize({width:50,height:50});
         this.setIconSize(20);
         this.tools = {};
+        this.activatedTool = null;
+        this.lastActivatedToolBoxElements = {};
+        this.initLastActivatedToolBoxElements();
         this.$location = {
             toolBox : $('#toolbar'),
             toolsContainer : $('.tools')
@@ -16,6 +19,25 @@ class TemplateToolBox{
     active(){
         console.log('icii')
         this.$location.toolBox.fadeIn();
+    }
+
+    initLastActivatedToolBoxElements(){
+        this.lastActivatedToolBoxElements = {
+            tool : {
+                'li' : null,
+                'i'  : null
+            },
+            subTool: {
+                'li' : null,
+                'i'  : "dfgdfg"
+            }
+        }
+    }
+    setLastActivatedToolBoxElements({tool = {li : false, i:false}, subTool = {li:false,i:false}} = {}){
+        if(tool.li)this.lastActivatedToolBoxElements.tool.li=tool.li;
+        if(tool.i)this.lastActivatedToolBoxElements.tool.i=tool.i;
+        if(subTool.li)this.lastActivatedToolBoxElements.subTool.li=subTool.li;
+        if(subTool.i) this.lastActivatedToolBoxElements.subTool.i = subTool.i
     }
 
     setToolBoxCaseSize(size){
@@ -49,18 +71,19 @@ class TemplateToolBox{
            console.log("[TemplateToolBox :: showMenuCase ] la fonction doit comporter une proprieté icon de type object jquery integrant une balise i");
            return
        }*/
-       let icon = tool.jq;
-       let caseContainer = $(`<span title=${tool.title} class="${tool.name}"></span>`);
+       let icon = tool.iconContainer;
+
+
        let menuCase = $('<li class="tools"></li>');
-       console.log(menuCase.parent())
+
         //menuCase.width(this.casesProperties.size.width);
         //menuCase.height(this.casesProperties.size.height);
 
         this.$location.toolBox.find('ul').css('background-color',this.casesProperties.background)
         icon.css('font-size',this.iconsSize);
 
-        menuCase.append(caseContainer.append(icon));
-        this.$location.toolBox.find('ul').append(menuCase);
+        menuCase.append(icon);
+        this.$location.toolBox.find('ul:first').append(menuCase);
     }
 
     disactiveAllTools(exception){
@@ -75,30 +98,59 @@ class TemplateToolBox{
 
         Object.keys(this.tools).forEach((tool)=>{
             if(!exceptionArray.includes(tool)){
-                this.tools[tool].jq.parents('.tools').removeClass('active-tool');
+               console.log(this.tools[tool].iconContainer)
+                this.tools[tool].iconContainer.first().parents('.tools').removeClass('active-tool');
                 this.tools[tool].activeTool(false);
             }
         })
     }
 
+    disactiveSubTools(){
+        let subTool = $('.active-subTool').length<1?null:$('.active-subTool').find('i').data('subtool');
+        if(subTool!==null){
+            let toolName = $('.active-subTool').parents('.tools li').find('i:first').data('eventname');
+            this.tools[toolName].subTool=null
+            $('.active-subTool').removeClass('active-subTool');
+        }
+        return subTool;
+    }
+
     activeToolBoxEvents(){
         //Au click sur un element de la toolBox
-        console.log(this.$location.toolBox.find('li'))
         this.$location.toolBox.find('li').on('click',(e)=>{
-            let eventName = $(e.currentTarget).find('i').data('eventName');
-            // Désactivation de tous les outils de modification de zones
-            this.disactiveAllTools(eventName);
-            if(this.tools[eventName].state !== 'enabled'){
-                console.log('icii3')
-                //Si l'element cliqué n est pas actif on l active
-                this.tools[eventName].activeTool(true);
-                this.tools[eventName].jq.parents('.tools').addClass('active-tool')
-            }else{
-                //Si l element cliqué est active on le desactive
-                console.log('iciii2')
-                this.tools[eventName].activeTool(false);
-                this.tools[eventName].jq.parents('.tools').removeClass('active-tool')
+            let lastSubToolRemoved=this.disactiveSubTools();
+            let lastActivatedToolBoxElements = {tool : {li : null, i:null}, subTool : {li:null,i:null}};
+
+            if(!$(e.currentTarget).hasClass('tools')){
+                lastActivatedToolBoxElements.subTool.li=$(e.currentTarget);
+                lastActivatedToolBoxElements.subTool.i = lastActivatedToolBoxElements.subTool.li.find('i');
             }
+
+            lastActivatedToolBoxElements.tool.li=$(e.currentTarget).hasClass('tools')?$(e.currentTarget):$(e.currentTarget).parents('.tools li');
+            lastActivatedToolBoxElements.tool.i = lastActivatedToolBoxElements.tool.li.find('i:first');
+
+
+            this.setLastActivatedToolBoxElements(lastActivatedToolBoxElements);
+            if(this.activatedTool !== null)console.log(this.activatedTool.subTool);
+
+            let eventName = this.lastActivatedToolBoxElements.tool.i.data('eventname');
+            // Désactivation de tous les outils de modification de zones
+            console.log(eventName)
+            this.disactiveAllTools(eventName);
+            //this.disactiveSubTools(eventName);
+            if(typeof lastActivatedToolBoxElements.subTool.i !== 'undefined' && lastActivatedToolBoxElements.subTool.i!== null && typeof lastActivatedToolBoxElements.subTool.i.data('subtool') !== 'undefined' && lastActivatedToolBoxElements.subTool.i.data('subtool') !== lastSubToolRemoved){
+                lastActivatedToolBoxElements.subTool.li.addClass('active-subTool')
+                this.tools[eventName].subTool = lastActivatedToolBoxElements.subTool.i.data('subtool');
+
+            }
+            if(this.tools[eventName].state !== 'enabled'){
+                //Si l'element cliqué n est pas actif on l active
+                this.activeToolInToolBox(eventName,true);
+            }else{
+                if(lastActivatedToolBoxElements.subTool.li!== null && lastActivatedToolBoxElements.subTool.i.data('subtool') === lastSubToolRemoved)
+                this.activeToolInToolBox(eventName,false);
+            }
+            e.stopPropagation()
         })
     }
     activeAllTools(){
@@ -107,6 +159,17 @@ class TemplateToolBox{
         Object.keys(this.tools).forEach((tool)=>{
             this.tools[tool].active();
         })
+    }
+    activeToolInToolBox(toolName,active=true){
+        this.tools[toolName].activeTool(active);
+        if(active){
+            this.activatedTool= this.tools[toolName]
+            this.tools[toolName].iconContainer.first().parents('.tools').addClass('active-tool')
+        }else{
+            this.activatedTool= null
+            this.tools[toolName].iconContainer.first().parents('.tools').removeClass('active-tool')
+        }
+
     }
 
     addTools(tool){

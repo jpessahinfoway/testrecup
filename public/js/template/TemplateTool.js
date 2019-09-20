@@ -4,9 +4,11 @@ class TemplateTool {
         this.name = this.constructor.name
         this.jq = null;
         this.icon = null;
+        this.title = null
         this.state = 'disabled';
         this.$eventLocation=null;
         this.workZone = $('#template__workzone__templateZone')
+        this.activatedSubTool =null;
         this.activated = false;
     }
 
@@ -28,14 +30,16 @@ class TemplateTool {
     }
 
     setIcon(iconClass){
-        this.icon = `<i></i>`
-        this.jq=$(this.icon);
+        this.icon = $(`<i data-eventname="${this.constructor.name}"></i>`)
+        this.iconContainer = $(`<span title=${this.title} class="${this.name}"></span>`);
+
+        this.iconContainer.append(this.icon);
+
         iconClass.split(' ').forEach((className)=>{
-            this.jq.addClass(className);
+            this.icon.addClass(className);
         });
-        this.jq.data('eventName',this.constructor.name);
+        this.icon.data('eventname',this.constructor.name);
         console.log(iconClass);
-        console.log(this.jq);
     }
 
     isActivated(){
@@ -52,9 +56,6 @@ class TemplateTool {
         return this.state !== 'disabled';
     }
 
-    addSubFunctionalities(){
-
-    }
     activeToolDecorator(boolean,functionToExecuteWhenEventIsTriggered){
         console.log('aaaaaaaa')
         if(typeof boolean ==='undefined'){

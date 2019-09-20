@@ -12,6 +12,12 @@ let template = new Template(templateProperties);
 template.attachInterface();
 template.create();
 
+$.ajax({
+    url : "/template/test",
+    type : 'POST',
+    data : {test : 'test'}
+});
+
 //let Template = templateInterface.createTemplate(templateProperties);
 /*
 //On attache la toolBox à l'interface du template

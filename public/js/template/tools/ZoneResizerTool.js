@@ -15,7 +15,7 @@ class ZoneResizerTool extends TemplateTool{
 
 
     appendResizeButton(){
-        let myPromise = new Promise((resolve)=>{
+
             Object.keys(this.template.zones).forEach((templateZoneIndex,iterIndex)=>{
                 let currentZone = this.template.zones[templateZoneIndex];
                 this.iconsArray = [];
@@ -36,23 +36,13 @@ class ZoneResizerTool extends TemplateTool{
                     console.log(this.template.zones[templateZoneIndex])
                     this.template.zones[templateZoneIndex].$zone.append(icon)
                 })
-                if(iterIndex === Object.keys(this.template.zones).length-1){
-                    let zoneRemoverFinderInterval = setInterval(()=>{
-                        if(currentZone.$zone.find('.zoneResizer').length===this.iconsArray.length){
-                            resolve('icone zone Remover ajouté partout')
-                            clearInterval(zoneRemoverFinderInterval);
-                        }
-                    },100);
-                }
             })
-        })
-        return myPromise;
     }
 
     resizeZoneOnMouseActivity(){
         let newPosition,oldPosition,deplacementValue
 
-        $(`.${this.$eventLocation}`).on('mousedown.'+this.constructor,(e)=>{
+        $('body').on('mousedown.'+this.constructor,'.zoneResizer',(e)=>{
             this.lastIconClicked = $(e.currentTarget);
             this.activated=true;
             let zoneId=$(e.currentTarget).parent().prop('id').match(/[0-9]*$/)[0];
@@ -63,7 +53,7 @@ class ZoneResizerTool extends TemplateTool{
             oldPosition = null;
             deplacementValue = null;
         });
-        $(`${'body'}`).on('mousemove.'+this.constructor.name, (e) => {
+        $('body').on('mousemove.'+this.constructor.name, (e) => {
 
 
             if (this.activated) {
@@ -138,9 +128,8 @@ class ZoneResizerTool extends TemplateTool{
         super.activeToolDecorator(boolean,(mode)=>{
             if(mode==='on'){
 
-                this.appendResizeButton().then(()=>{
-                    this.resizeZoneOnMouseActivity()
-                })
+                this.appendResizeButton()
+                this.resizeZoneOnMouseActivity()
             }else if(mode === 'off'){
                 let $eventLocation = $('.'+this.$eventLocation);
                 $eventLocation.remove();
