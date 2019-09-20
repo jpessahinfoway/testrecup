@@ -6,6 +6,7 @@
 /var/
 /vendor/
 /public/lib/
+/.idea/
 ###< symfony/framework-bundle ###
 
 ###> symfony/phpunit-bridge ###
